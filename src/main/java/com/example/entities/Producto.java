@@ -15,6 +15,8 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,8 +46,10 @@ public class Producto implements Serializable{
     @Min(value = 0, message = "el stock no puede estar negativo")
     private Long stock;
 
+    
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @NotNull(message = "el producto tiene que tener una presentacion")
+    @JsonIgnore
     private Presentacion presentacion;
 
 }
