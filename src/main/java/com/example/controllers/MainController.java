@@ -19,9 +19,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -109,7 +111,7 @@ public class MainController {
         
         ResponseEntity<Map<String,Object>> responseEntity = null;
         
-// same as Map<String,Object> name =
+        // var same as Map<String,Object> name =
         var responseAsMap = new HashMap<String,Object>();
 
         if(result.hasErrors()){  // si result trae errores
@@ -157,6 +159,94 @@ public class MainController {
 
         return responseEntity;
     }
+
+
+    // MODIFICAR  ( muy similar al post )
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String,Object>> update(
+        @Valid                           // VALIDA el JSON que llega con las validaciones que definimos en la entidad
+        @RequestBody Producto producto,  //@RBODY como es post, los datos vienen en el CUERPO de la peticion
+        BindingResult result,
+        @PathVariable(name = "id") Long id) {          // recopila
+                                
+        
+        ResponseEntity<Map<String,Object>> responseEntity = null;
+        
+        // same as Map<String,Object> name =
+        var responseAsMap = new HashMap<String,Object>();
+
+        if(result.hasErrors()){  // si result trae errores
+
+            List<String> errores = new ArrayList<>(); 
+
+            for (ObjectError error : result.getAllErrors()) {  //el metodo getallerrors trae cada error en tipo ObjectError
+                errores.add(error.getDefaultMessage());  // lleno la lista con los msj que defini en entity
+            }
+            
+            responseAsMap.put("errores", errores);
+            
+            responseEntity = new ResponseEntity<Map<String,Object>>(responseAsMap, HttpStatus.BAD_REQUEST);
+            
+            return responseEntity;
+
+        } 
+
+        try {
+
+            producto.setId(id);  //// LO QUE SE AGREGA a diferencia DEL POST
+            
+            Producto productoDB = productoService.save(producto);
+
+            if(productoDB!=null){ 
+                
+                responseAsMap.put("mensaje", "El producto se ha guardado correctamente. Id Prod: "
+                                    + productoDB.getId());
+                responseAsMap.put("producto", productoDB);
+                // tanto "msj" como "prod" son propiedades que va a mostrar el JSON
+
+                responseEntity = new ResponseEntity<>(responseAsMap, HttpStatus.CREATED); //201
+ 
+            } else {
+
+                responseAsMap.put("mensaje", "Error al modificar el producto");
+                responseEntity = new ResponseEntity<>(responseAsMap,HttpStatus.BAD_GATEWAY);
+
+            }
+
+        } catch (DataAccessException e) {
+
+            responseAsMap.put("mensaje", "Error al modificar el producto " + e.getMostSpecificCause());
+            responseEntity = new ResponseEntity<>(responseAsMap,HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+
+        return responseEntity;
+    }
+
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable(name = "id") Long id) {
+        
+        ResponseEntity<String> responseEntity = null;
+
+        productoService.delete(id);
+
+        Producto productoDB = productoService.findById(id);
+
+        if(productoDB == null){
+
+            responseEntity = new ResponseEntity<>("El producto se ha borrado correctamente", 
+                                                HttpStatus.OK);
+
+        }else{
+            responseEntity = new ResponseEntity<>("El producto NO se ha borrado", 
+                                                HttpStatus.BAD_REQUEST);
+        }
+
+        return responseEntity;
+    }
+
 
 
 }
