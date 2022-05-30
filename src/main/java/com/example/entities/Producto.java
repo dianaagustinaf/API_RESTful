@@ -34,7 +34,7 @@ public class Producto implements Serializable{
     private Long id;
 
     @NotEmpty(message = "El nombre no puede estar vacio")
-    @Size(max = 50, message = "Nombre entre 3 y 50")
+    @Size(max = 50, min=3, message = "Nombre entre 3 y 50")
     private String nombre;
 
     @Size(max = 250, message = "Descripcion hasta 250 caracteres")
