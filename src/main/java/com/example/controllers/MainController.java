@@ -30,7 +30,7 @@ public class MainController {
     // en REST se define el metodo segun el verbo HTTP, GET POST DELETE
     @GetMapping
     public ResponseEntity<List<Producto>> findAll(@RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+                                                    @RequestParam(required = false) Integer size) {
 
         // Para que devuelva el listado de productos ordenado por nombre, tanto si es
         // con paginacion

@@ -37,7 +37,7 @@ public class Producto implements Serializable{
     @Size(max = 50, message = "Nombre entre 3 y 50")
     private String nombre;
 
-    @Size(max = 250, min = 3, message = "Nombre entre 3 y 250")
+    @Size(max = 250, message = "Descripcion hasta 250 caracteres")
     private String descripcion;
 
     @Min(value = 0, message = "el precio no puede ser negativo")
@@ -47,7 +47,7 @@ public class Producto implements Serializable{
     private Long stock;
 
     
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @NotNull(message = "el producto tiene que tener una presentacion")
     @JsonIgnore
     private Presentacion presentacion;

@@ -30,13 +30,11 @@ public class Presentacion implements Serializable{
     private Long id;
     
     @NotEmpty(message = "El nombre no puede estar vacio")
-    @Size(max = 50, message = "Nombre entre 3 y 50")
     private String nombre;
 
-    @Size(max = 250, min = 3, message = "Nombre entre 3 y 250")
     private String descripcion;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, mappedBy = "presentacion")
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE, mappedBy = "presentacion")
     private List<Producto> productos;
 
 }
