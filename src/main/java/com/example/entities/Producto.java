@@ -49,7 +49,6 @@ public class Producto implements Serializable{
     
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @NotNull(message = "el producto tiene que tener una presentacion")
-    @JsonIgnore
     private Presentacion presentacion;
 
 }
