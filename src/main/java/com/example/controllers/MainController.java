@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import com.example.entities.Producto;
+import com.example.hateoas.assemblers.ProductoModelAssembler;
 import com.example.services.ProductoService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -29,13 +33,79 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;  // add for HATEOAS
+
+
 @RestController   // responsable de armar el JSON
+@RequiredArgsConstructor
 @RequestMapping("/productos") /// LA URL REFIERE A LOS RECURSOS, en este caso se asume que manda productos
 public class MainController {
+
+    
+    @NonNull
+    private final ProductoModelAssembler assembler;      // hateoas
+
+    /* en lugar de hacer el constructor: 
+    lombok con requiredargsconstructor y al assembler NonNull
+
+	public MainController(ProductoModelAssembler assembler) {
+		this.assembler = assembler;
+	}
+    */
+
 
     @Autowired
     private ProductoService productoService;
 
+   
+    @GetMapping
+	public CollectionModel<EntityModel<Producto>> findAll(@RequestParam(required = false) Integer page,
+			@RequestParam(required = false) Integer size) {
+
+		// Para que devuelva el listado de productos ordenado por nombre, tanto si es
+		// con paginacion
+		// como si no lo es
+		Sort sortByName = Sort.by("nombre");
+
+		List<Producto> productos = null;
+
+		if (page != null && size != null) {
+			// Con paginacion
+			Pageable pageable = PageRequest.of(page, size, sortByName);
+			productos = productoService.findAll(pageable).getContent();
+		} else {
+			// Sin paginacion y recuperamos la lista completa de los productos
+			productos = productoService.findAll(sortByName);
+
+		}
+
+		var productosWithHyperlinks = productos.stream()
+					.map(assembler::toModel)
+					.collect(Collectors.toList());
+
+		return CollectionModel.of(productosWithHyperlinks,
+		            linkTo(methodOn(MainController.class)
+                    .findAll(page,size)).withSelfRel());
+
+	}
+
+
+    @GetMapping(value = "/{id}")
+	public EntityModel<Producto> findById(@PathVariable(name = "id") long id) {
+
+		Producto producto = productoService.findById(id);
+
+		return assembler.toModel(producto);
+	}
+
+   
+   
+   
+   
+   /*
     // no devuelve el modelo
     // devuelve JSON para ser consumido desde el front
 
@@ -100,6 +170,8 @@ public class MainController {
         return responseEntity;
 
     }
+
+*/
 
     // POST      // le mandamos por JSON los datos a persistir y HAY QUE VALIDARLOS
     @PostMapping          // Map tipo Obj habilita a devolver errores, el objeto, etc
